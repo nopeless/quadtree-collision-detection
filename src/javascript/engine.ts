@@ -55,18 +55,16 @@ export function collideParticles(
 ): void {
   const dx = p1.pos.x - p2.pos.x;
   const dy = p1.pos.y - p2.pos.y;
-  const distSq = dx * dx + dy * dy;
-  const radiusSum = p1.radius + p2.radius;
-
-  // Check for contact
-  if (distSq > radiusSum * radiusSum || distSq === 0) {
-    return; 
-  }
 
   const dist = Math.hypot(dx, dy);
 
+  // Check for contact
+  if (dist > p1.radius + p2.radius || dist === 0) {
+    return; 
+  }
+
   // Structural integrity: Minimum displacement to resolve penetration
-  const overlap = radiusSum - dist;
+  const overlap = p1.radius + p2.radius - dist;
   const nx = dx / dist;
   const ny = dy / dist;
 
