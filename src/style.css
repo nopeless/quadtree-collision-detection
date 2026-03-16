@@ -17,7 +17,6 @@ body {
   gap: 20px;
   align-items: center;
   z-index: 10;
-  backdrop-filter: blur(4px);
 }
 
 .controls a {
