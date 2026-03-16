@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2D Rigid Body Physics: O(n²) vs QuadTree</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <div class="controls">
+      <div>
+        <label for="algorithm">Implementation: </label>
+        <select id="algorithm">
+          <option value="quadtree">QuadTree Optimized</option>
+          <option value="naive">O(n²) Bruteforce</option>
+        </select>
+      </div>
+      <div>
+        <label for="particleCount">Particles: </label>
+        <select id="particleCount">
+          <option value="100">100</option>
+          <option value="250" selected>250</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+          <option value="2000">2000</option>
+        </select>
+      </div>
+      <div class="stats" id="tpsDisplay">TPS: 0</div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+    
+    <script type="module" src="/javascript/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+body {
+  margin: 0;
+  background: #111;
+  color: #eee;
+  overflow: hidden;
+}
+
+.controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(34, 34, 34, 0.8);
+  padding: 15px 30px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+select {
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.stats {
+  font-family: monospace;
+  font-size: 16px;
+  color: #4ade80;
+}
+
+canvas {
+  display: block;
+  background: #000;
+}
