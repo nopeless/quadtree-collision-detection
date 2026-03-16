@@ -3,6 +3,7 @@ body {
   background: #111;
   color: #eee;
   overflow: hidden;
+  max-width: 100vw;
 }
 
 .controls {
@@ -17,6 +18,10 @@ body {
   align-items: center;
   z-index: 10;
   backdrop-filter: blur(4px);
+}
+
+.controls a {
+  color: white;
 }
 
 select {
