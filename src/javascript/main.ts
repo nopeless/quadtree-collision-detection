@@ -16,12 +16,13 @@ const stepBtn = document.getElementById('stepBtn') as HTMLButtonElement;
 
 // State Variables 
 let engine: Engine;
-let tpsCounter = 0;
 let isRunning = true;
 let isPaused = false;
 let stepRequested = false;
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+let fpsCounter = 0;
+let tickCount = 0;
+let tickMs = 0;
 
 function resize() {
   canvas.width = window.innerWidth;
@@ -85,23 +86,24 @@ function render() {
   }
 }
 
-const MAX_TPS = 60;
-
 /**
  * Continuous simulation event loop.
  */
-(async function runPhysicsLoop() {
+function runPhysicsLoop() {
   engine = new Engine(evaluateNaive);
   resize(); // sets canvas sizing and runs initializeSimulation()
 
   setInterval(() => {
-    tpsDisplay.textContent = `TPS: ${tpsCounter} / ${MAX_TPS}`;
-    tpsCounter = 0;
+    const avg = tickCount === 0 ? 0 : tickMs / tickCount;
+    tpsDisplay.textContent = `FPS: ${fpsCounter} / Avg Tick: ${avg.toFixed(2)}ms`;
+    fpsCounter = 0;
+    tickCount = 0;
+    tickMs = 0;
   }, 1000);
 
-  let nextFrame = Date.now() + 1000 / MAX_TPS;
+  async function loop() {
+    if (!isRunning) return;
 
-  while (isRunning) {
     const algo = algoSelect.value;
     const bucketSize = parseInt(bucketSelect.value, 10);
 
@@ -114,27 +116,31 @@ const MAX_TPS = 60;
       }
       engine.bucketSize = bucketSize;
 
+      const tickStart = performance.now();
       await engine.tick();
+      const currentTickMs = performance.now() - tickStart;
+      tickMs += currentTickMs;
+      tickCount++;
+      
       render();
 
       if (stepRequested) {
         stepRequested = false;
       }
 
-      tpsCounter++;
+      fpsCounter++;
     } else {
       // Just render the current state when paused (in case we resize or change colors)
       render();
     }
 
-    // wait until next frame tick
-    const now = Date.now();
-    await sleep(nextFrame - now);
-
-    // If we're running behind
-    nextFrame = Math.max(nextFrame + 1000 / MAX_TPS, now);
+    requestAnimationFrame(loop);
   }
-})();
+
+  requestAnimationFrame(loop);
+}
+
+runPhysicsLoop();
 
 playPauseBtn.addEventListener('click', () => {
     isPaused = !isPaused;
