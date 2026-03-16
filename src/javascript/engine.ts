@@ -63,7 +63,7 @@ export class Particle {
   mass: number;
   color: string;
 
-  constructor(x: number, y: number, r: number, vx: number, vy: number, color: string) {
+  constructor(x: number, y: number, r: number, vx: number, vy: number, color: string = '#fff') {
     this.pos = new Vector2(x, y);
     this.vel = new Vector2(vx, vy);
     this.radius = r;
