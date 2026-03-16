@@ -16,36 +16,34 @@ describe('Particle physics mechanics', () => {
     });
 
     it('perfectly elastic head-on collision exchanges velocities', () => {
-        const a = new Particle(0, 0, 10, 5, 0); // Moving right at 5
-        const b = new Particle(25, 0, 10, -5, 0); // Moving left at -5
-        
-        // Advance so they intersect significantly
+        const a = new Particle(0, 0, 10, 5, 0);
+        const b = new Particle(25, 0, 10, -5, 0);
+
         updateParticle(a);
         updateParticle(b);
-        
+
         expect(a.pos.x).toBe(5);
         expect(b.pos.x).toBe(20);
 
         collideParticles(a, b);
 
-        // Mass is identical. Elastic head-on -> velocities swapped.
         expect(a.vel.x).toBeCloseTo(-5);
         expect(b.vel.x).toBeCloseTo(5);
-        
+
         // Ensure positional correction pushed them apart
         expect(b.pos.x - a.pos.x).toBeCloseTo(20); 
     });
 });
 
 describe('Engine functionality', () => {
-    it('executes dependency injected evaluator correctly', () => {
+    it('executes dependency injected evaluator correctly', async () => {
         const mockProcessor = vi.fn();
         const engine = new Engine(mockProcessor);
         engine.width = 100;
         engine.height = 100;
         engine.particles = [new Particle(0,0,5,0,0)];
 
-        engine.tick();
+        await engine.tick();
         expect(mockProcessor).toHaveBeenCalledWith(engine, collideParticles); 
 
     });

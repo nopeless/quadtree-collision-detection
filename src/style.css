@@ -6,9 +6,10 @@ body {
 }
 
 .controls {
+  top: 1px;
+  left: 1px;
+
   position: absolute;
-  top: 20px;
-  left: 20px;
   background: rgba(34, 34, 34, 0.8);
   padding: 15px 30px;
   display: flex;
@@ -19,15 +20,15 @@ body {
 }
 
 select {
-  padding: 8px 12px;
   color: #fff;
+  background-color: transparent;
+  border: 0;
   font-size: 14px;
 }
 
 .stats {
   font-family: monospace;
   font-size: 16px;
-  color: #ebbcd6;
 }
 
 canvas {

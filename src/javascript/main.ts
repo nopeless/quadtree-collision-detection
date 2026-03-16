@@ -8,13 +8,18 @@ const ctx = canvas.getContext('2d')!;
 const tpsDisplay = document.getElementById('tpsDisplay') as HTMLDivElement;
 const algoSelect = document.getElementById('algorithm') as HTMLSelectElement;
 const countSelect = document.getElementById('particleCount') as HTMLSelectElement;
+const bucketSelect = document.getElementById('bucketSize') as HTMLSelectElement;
+const speedSelect = document.getElementById('speed') as HTMLSelectElement;
+const playPauseBtn = document.getElementById('playPauseBtn') as HTMLButtonElement;
+const stepBtn = document.getElementById('stepBtn') as HTMLButtonElement;
 
 // State Variables 
 let engine: Engine;
 let tpsCounter = 0;
 let isRunning = true;
+let isPaused = false;
+let stepRequested = false;
 
-// Helper: yield to event loop.
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 function resize() {
@@ -34,6 +39,7 @@ window.addEventListener('resize', resize);
  */
 function initializeSimulation() {
   const count = parseInt(countSelect.value, 10);
+  const speed = parseFloat(speedSelect.value);
   const particles: Particle[] = [];
   const radius = 4;
 
@@ -42,19 +48,20 @@ function initializeSimulation() {
     // ensure within bounds
     const x = r + Math.random() * (canvas.width - r * 2);
     const y = r + Math.random() * (canvas.height - r * 2);
-    
-    // random velocity approx [-2, 2]
-    const vx = (Math.random() - 0.5) * 4;
-    const vy = (Math.random() - 0.5) * 4;
+
+    const angle = Math.random() * Math.PI * 2;
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed;
 
     const hue = Math.floor(Math.random() * 360);
     const color = `hsl(${hue}, 80%, 60%)`;
 
     particles.push(new Particle(x, y, r, vx, vy, color));
   }
-  
+
   if (engine) {
     engine.particles = particles;
+    engine.maxRadius = radius;
   }
 }
 
@@ -65,6 +72,8 @@ function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (!engine) return;
+
+  engine.drawQuadTree(ctx);
 
   for (const p of engine.particles) {
     ctx.beginPath();
@@ -79,7 +88,7 @@ function render() {
  * Continuous simulation event loop.
  */
 (async function runPhysicsLoop() {
-  engine = new Engine(evaluateQuadtree);
+  engine = new Engine(evaluateNaive);
   resize(); // sets canvas sizing and runs initializeSimulation()
 
   setInterval(() => {
@@ -88,25 +97,53 @@ function render() {
   }, 1000);
 
   while (isRunning) {
+    const start = Date.now();
     const algo = algoSelect.value;
-    
-    if (algo === 'naive') {
-      engine.setProcessor(evaluateNaive);
+    const bucketSize = parseInt(bucketSelect.value, 10);
+
+    if (!isPaused || stepRequested) {
+      if (algo === 'naive') {
+        engine.initQuadTree(null);
+        engine.setProcessor(evaluateNaive);
+      } else {
+        engine.setProcessor(evaluateQuadtree);
+      }
+      engine.bucketSize = bucketSize;
+
+      await engine.tick();
+      render();
+
+      if (stepRequested) {
+        stepRequested = false;
+      }
+
+      tpsCounter++;
     } else {
-      engine.setProcessor(evaluateQuadtree);
+      // Just render the current state when paused (in case we resize or change colors)
+      render();
     }
 
-    engine.tick();
-    render();
-
-    tpsCounter++;
-
-    // Yield back to the browser's UI thread temporarily without
-    // bottlenecking at the screen refresh rate like rAF. 
-    await sleep(0);
+    // Max 100 TPS
+    await sleep(10 - (Date.now() - start));
   }
 })();
 
+playPauseBtn.addEventListener('click', () => {
+    isPaused = !isPaused;
+    playPauseBtn.textContent = isPaused ? 'Play' : 'Pause';
+    stepBtn.disabled = !isPaused;
+});
+
+stepBtn.addEventListener('click', () => {
+    if (isPaused) {
+        stepRequested = true;
+    }
+});
+
 countSelect.addEventListener('change', () => {
+    initializeSimulation();
+});
+
+speedSelect.addEventListener('change', () => {
     initializeSimulation();
 });

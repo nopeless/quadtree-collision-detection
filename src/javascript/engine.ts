@@ -3,6 +3,8 @@
  * Assumes perfectly elastic collisions ($e = 1$) and mass proportional to $r^2$.
  */
 
+import { QuadTree } from "./quadtree";
+
 /**
  * 2D vector coordinate.
  */
@@ -67,12 +69,12 @@ export function collideParticles(
   const overlap = radiusSum - dist;
   const nx = dx / dist;
   const ny = dy / dist;
-  
+
   // Position correction to prevent clipping/sticking (assuming equal pushing)
   const totalMass = p1.mass + p2.mass;
   const correctionRatio1 = p2.mass / totalMass;
   const correctionRatio2 = p1.mass / totalMass;
-  
+
   p1.pos.x += nx * overlap * correctionRatio1;
   p1.pos.y += ny * overlap * correctionRatio1;
   p2.pos.x -= nx * overlap * correctionRatio2;
@@ -81,7 +83,7 @@ export function collideParticles(
   // Relative velocity
   const rvx = p1.vel.x - p2.vel.x;
   const rvy = p1.vel.y - p2.vel.y;
-  
+
   // Velocity along the normal
   const velocityAlongNormal = rvx * nx + rvy * ny;
 
@@ -131,7 +133,7 @@ export function resolveBoundaries(p: Particle, width: number, height: number): v
 /**
  * Functional signature for collision evaluation algorithms.
  */
-export type CollisionProcessor = (engine: Engine, callback: (p1: Particle, p2: Particle) => void) => void;
+export type CollisionProcessor = (engine: Engine, callback: (p1: Particle, p2: Particle) => void | Promise<void>) => Promise<void>;
 
 /**
  * Execution context for simulation state.
@@ -140,23 +142,72 @@ export class Engine {
   particles: Particle[] = [];
   width: number = 0;
   height: number = 0;
+  maxRadius: number = 0;
   processor: CollisionProcessor;
+  bucketSize: number = 4;
+  qtree: QuadTree | null = null;
 
-  constructor(processor: CollisionProcessor) {
+  constructor(processor: CollisionProcessor, particles: Particle[] = [], maxRadius: number = 0) {
     this.processor = processor;
+    this.particles = particles;
+    this.maxRadius = maxRadius;
+  }
+
+  initQuadTree(qtree: any): void {
+    this.qtree = qtree;
+  }
+
+  drawQuadTree(ctx: CanvasRenderingContext2D): void {
+    if (!this.qtree) return;
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#ddd';
+
+    // draw root bottom and right edges
+    ctx.beginPath();
+    ctx.moveTo(0, this.height - 0.5);
+    ctx.lineTo(this.width - 0.5, this.height - 0.5);
+    ctx.lineTo(this.width - 0.5, 0);
+    ctx.stroke();
+    ctx.closePath();
+
+    const drawLeaf = (tree: any) => {
+      // Boundaries are represented by centers and half-widths, so we convert to top-left to draw
+      let minX = Math.floor(tree.boundary.x - tree.boundary.w) + .5;
+      let minY = Math.floor(tree.boundary.y - tree.boundary.h) + .5;
+      let maxX = Math.floor(tree.boundary.x + tree.boundary.w) + .5;
+      let maxY = Math.floor(tree.boundary.y + tree.boundary.h) + .5;
+
+      // Draw only top and left edges
+      ctx.beginPath();
+      ctx.moveTo(minX, maxY);
+      ctx.lineTo(minX, minY);
+      ctx.lineTo(maxX, minY);
+      ctx.stroke();
+      ctx.closePath();
+
+      if (tree.divided) {
+        drawLeaf(tree.northeast);
+        drawLeaf(tree.northwest);
+        drawLeaf(tree.southeast);
+        drawLeaf(tree.southwest);
+      }
+    };
+
+    drawLeaf(this.qtree);
   }
 
   setProcessor(processor: CollisionProcessor): void {
     this.processor = processor;
   }
 
-  tick(): void {
+  async tick(): Promise<void> {
     for (const p of this.particles) {
       updateParticle(p);
       resolveBoundaries(p, this.width, this.height);
     }
-    
-    this.processor(this, collideParticles);
+
+    await this.processor(this, collideParticles);
   }
 }
 

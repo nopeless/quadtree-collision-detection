@@ -76,6 +76,18 @@ export class QuadTree {
     this.southwest = new QuadTree(sw, this.capacity);
 
     this.divided = true;
+
+    for (const p of this.particles) {
+      if (
+        this.northeast.insert(p) ||
+        this.northwest.insert(p) ||
+        this.southeast.insert(p) ||
+        this.southwest.insert(p)
+      ) {
+        // Successfully inserted
+      }
+    }
+    this.particles = [];
   }
 
   insert(p: Particle): boolean {
@@ -83,20 +95,19 @@ export class QuadTree {
       return false;
     }
 
-    if (this.particles.length < this.capacity) {
-      this.particles.push(p);
-      return true;
-    } else {
-      if (!this.divided) {
-        this.subdivide();
+    if (!this.divided) {
+      if (this.particles.length < this.capacity) {
+        this.particles.push(p);
+        return true;
       }
-
-      if (this.northeast.insert(p)) return true;
-      if (this.northwest.insert(p)) return true;
-      if (this.southeast.insert(p)) return true;
-      if (this.southwest.insert(p)) return true;
+      this.subdivide();
     }
-    
+
+    if (this.northeast.insert(p)) return true;
+    if (this.northwest.insert(p)) return true;
+    if (this.southeast.insert(p)) return true;
+    if (this.southwest.insert(p)) return true;
+
     return false;
   }
 
@@ -125,29 +136,18 @@ export class QuadTree {
 /**
  * Efficient broad-phase collision evaluator utilizing spatial partitioning.
  */
-export function processAllCollidingPairs(engine: Engine, callback: (p1: Particle, p2: Particle) => void): void {
+export async function processAllCollidingPairs(engine: Engine, callback: (p1: Particle, p2: Particle) => void | Promise<void>): Promise<void> {
   const particles = engine.particles;
   if (particles.length === 0) return;
 
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-
-  for (const p of particles) {
-    if (p.pos.x - p.radius < minX) minX = p.pos.x - p.radius;
-    if (p.pos.y - p.radius < minY) minY = p.pos.y - p.radius;
-    if (p.pos.x + p.radius > maxX) maxX = p.pos.x + p.radius;
-    if (p.pos.y + p.radius > maxY) maxY = p.pos.y + p.radius;
-  }
-
-  const cx = (minX + maxX) / 2;
-  const cy = (minY + maxY) / 2;
-  const w = (maxX - minX) / 2;
-  const h = (maxY - minY) / 2;
+  const cx = engine.width / 2;
+  const cy = engine.height / 2;
+  const w = engine.width / 2;
+  const h = engine.height / 2;
 
   const boundary = new Rectangle(cx, cy, w, h);
-  const qtree = new QuadTree(boundary, 4);
+  const qtree = new QuadTree(boundary, engine.bucketSize || 4);
+  engine.initQuadTree(qtree);
 
   // Build tree from spatial coordinates
   for (const p of particles) {
@@ -156,13 +156,14 @@ export function processAllCollidingPairs(engine: Engine, callback: (p1: Particle
 
   // Broad-phase bounds finding via Quadtree
   for (const p of particles) {
-    const range = new Rectangle(p.pos.x, p.pos.y, p.radius * 2, p.radius * 2);
+    const searchArea = p.radius + engine.maxRadius;
+    const range = new Rectangle(p.pos.x, p.pos.y, searchArea, searchArea);
     const candidates = qtree.query(range, []);
 
     // Narrow-phase scalar elastic processing
     for (const other of candidates) {
       if (p !== other) {
-        callback(p, other);
+        await callback(p, other);
       }
     }
   }
