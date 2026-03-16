@@ -85,7 +85,7 @@ function render() {
   }
 }
 
-const MAX_TPS = 500;
+const MAX_TPS = 60;
 
 /**
  * Continuous simulation event loop.
