@@ -1,5 +1,7 @@
 # Quadtrees & Collision Detection: An Interactive Demonstration
 
+[Live Demo](https://nopeless.github.io/quadtree-collision-detection/)
+
 An algorithmic comparison demonstrator designed for our CSCi Oral Comp presentation. This educational playground compares a naive $O(N^2)$ collision detection algorithm against a spatially optimized QuadTree implementation.
 
 ## The Problem: N-Body Collision Detection
