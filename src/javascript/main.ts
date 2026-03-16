@@ -5,6 +5,7 @@ import { processAllCollidingPairs as evaluateQuadtree } from './quadtree';
 // Element References 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
+ctx.imageSmoothingEnabled = false;
 const tpsDisplay = document.getElementById('tpsDisplay') as HTMLDivElement;
 const algoSelect = document.getElementById('algorithm') as HTMLSelectElement;
 const countSelect = document.getElementById('particleCount') as HTMLSelectElement;
