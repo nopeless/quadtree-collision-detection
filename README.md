@@ -8,7 +8,7 @@ An algorithmic comparison demonstrator designed for our CSCi Oral Comp presentat
 
 ## The Problem: N-Body Collision Detection
 
-In physical simulations, checking every object against every other object (the Brute Force method) yields an $O(n^2)$ complexity. As the number of objects ($n$) grows, the computational cost skyrockets causing the simulation to lag. 
+In physical simulations, checking every object against every other object (the Brute Force method) yields an $O(n^2)$ complexity. As the number of objects ($n$) grows, the computational cost increases quadratically causing the simulation to lag. 
 
 Our engine utilizes standard 2D elastic vector collision. However, calculating these mathematics for every possible pair becomes a severe bottleneck.
 
@@ -24,8 +24,11 @@ Instead of looping $N$ times against $N$ items, the Quadtree recursively decompo
 
 Use the interface to directly benchmark the algorithms in real-time under changing spatial constraints:
 
-- **Toggle Algorithm (Naive vs QuadTree):** Switch between the standard $O(n^2)$ evaluation and the spatial tree acceleration via the UI buttons.
-- **Adjust Object Count:** Add or remove particulate bodies to observe how the brute-force evaluation exponentially decays under load.
-- **Monitor Performance:** Watch the **TPS (Ticks Per Second)** indicator. QuadTrees will sustain a significantly higher computational logic rate at large object counts compared to the naive approach.
+- **Implementation:** Toggle between the baseline $O(n^2)$ approach and the QuadTree optimization.
+- **Bucket Size:** Capacity threshold before a QuadTree node dynamically subdivides.
+- **Particles:** Modify the active object count.
+- **Speed:** Modify speed of particles.
+- **Playback & Stepping:** Halt execution and advance the simulation one tick.
+- **Performance Metrics:** Real-time Ticks Per Second (TPS) of the simulation.
 
 > To view locally: `npm install` followed by `npm run dev`
