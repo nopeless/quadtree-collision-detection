@@ -10,10 +10,10 @@ export class QuadTree {
   particles: Particle[];
   divided: boolean;
 
-  northeast!: null | QuadTree;
-  northwest!: null | QuadTree;
-  southeast!: null | QuadTree;
-  southwest!: null | QuadTree;
+  northeast!: null | this;
+  northwest!: null | this;
+  southeast!: null | this;
+  southwest!: null | this;
 
   constructor(boundary: Rectangle, capacity: number) {
     this.boundary = boundary;
@@ -34,16 +34,16 @@ export class QuadTree {
     const hh = this.boundary.halfH / 2;
 
     const ne = new Rectangle(cx + hw, cy - hh, hw, hh);
-    this.northeast = new QuadTree(ne, this.capacity);
+    this.northeast = new QuadTree(ne, this.capacity) as this;
 
     const nw = new Rectangle(cx - hw, cy - hh, hw, hh);
-    this.northwest = new QuadTree(nw, this.capacity);
+    this.northwest = new QuadTree(nw, this.capacity) as this;
 
     const se = new Rectangle(cx + hw, cy + hh, hw, hh);
-    this.southeast = new QuadTree(se, this.capacity);
+    this.southeast = new QuadTree(se, this.capacity) as this;
 
     const sw = new Rectangle(cx - hw, cy + hh, hw, hh);
-    this.southwest = new QuadTree(sw, this.capacity);
+    this.southwest = new QuadTree(sw, this.capacity) as this;
 
     this.divided = true;
 
@@ -60,25 +60,31 @@ export class QuadTree {
     this.particles = [];
   }
 
+  _insertIntoChildren(p: Particle): boolean {
+    return (
+      this.northeast!.insert(p) ||
+      this.northwest!.insert(p) ||
+      this.southeast!.insert(p) ||
+      this.southwest!.insert(p)
+    );
+  }
+
   insert(p: Particle): boolean {
     if (!this.boundary.contains(p)) {
       return false;
     }
 
-    if (!this.divided) {
-      if (this.particles.length < this.capacity) {
-        this.particles.push(p);
-        return true;
-      }
-      this.subdivide();
+    if (this.divided) {
+      return this._insertIntoChildren(p);
     }
 
-    if (this.northeast!.insert(p)) return true;
-    if (this.northwest!.insert(p)) return true;
-    if (this.southeast!.insert(p)) return true;
-    if (this.southwest!.insert(p)) return true;
+    if (this.particles.length < this.capacity) {
+      this.particles.push(p);
+      return true;
+    }
 
-    return false;
+    this.subdivide();
+    return this._insertIntoChildren(p);
   }
 
   query(range: Rectangle, found: Particle[]): Particle[] {
@@ -86,17 +92,19 @@ export class QuadTree {
       return found;
     }
 
-    for (const p of this.particles) {
-      if (range.contains(p)) {
-        found.push(p);
-      }
-    }
-
     if (this.divided) {
       this.northwest!.query(range, found);
       this.northeast!.query(range, found);
       this.southwest!.query(range, found);
       this.southeast!.query(range, found);
+
+      return found;
+    }
+
+    for (const p of this.particles) {
+      if (range.contains(p)) {
+        found.push(p);
+      }
     }
 
     return found;

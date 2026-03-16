@@ -1,30 +1,13 @@
 import { Particle, Engine, Rectangle } from './engine';
+import { QuadTree } from './quadtree';
 
 /**
  * Persistent QuadTree that maintains structure across frames.
  * Updates particle positions dynamically instead of rebuilding from scratch.
  */
-export class QuadTreeKeep {
-  boundary: Rectangle;
-  capacity: number;
-  particles: Particle[];
-  divided: boolean;
-
-  northeast: null | QuadTreeKeep;
-  northwest: null | QuadTreeKeep;
-  southeast: null | QuadTreeKeep;
-  southwest: null | QuadTreeKeep;
-
+export class QuadTreeKeep extends QuadTree {
   constructor(boundary: Rectangle, capacity: number) {
-    this.boundary = boundary;
-    this.capacity = capacity;
-    this.particles = [];
-    this.divided = false;
-
-    this.northeast = null;
-    this.northwest = null;
-    this.southeast = null;
-    this.southwest = null;
+    super(boundary, capacity);
   }
 
   subdivide(): void {
@@ -33,10 +16,10 @@ export class QuadTreeKeep {
     const hw = this.boundary.halfW / 2;
     const hh = this.boundary.halfH / 2;
 
-    this.northeast = new QuadTreeKeep(new Rectangle(cx + hw, cy - hh, hw, hh), this.capacity);
-    this.northwest = new QuadTreeKeep(new Rectangle(cx - hw, cy - hh, hw, hh), this.capacity);
-    this.southeast = new QuadTreeKeep(new Rectangle(cx + hw, cy + hh, hw, hh), this.capacity);
-    this.southwest = new QuadTreeKeep(new Rectangle(cx - hw, cy + hh, hw, hh), this.capacity);
+    this.northeast = new QuadTreeKeep(new Rectangle(cx + hw, cy - hh, hw, hh), this.capacity) as this;
+    this.northwest = new QuadTreeKeep(new Rectangle(cx - hw, cy - hh, hw, hh), this.capacity) as this;
+    this.southeast = new QuadTreeKeep(new Rectangle(cx + hw, cy + hh, hw, hh), this.capacity) as this;
+    this.southwest = new QuadTreeKeep(new Rectangle(cx - hw, cy + hh, hw, hh), this.capacity) as this;
 
     this.divided = true;
 
@@ -44,54 +27,6 @@ export class QuadTreeKeep {
       this._insertIntoChildren(p);
     }
     this.particles = [];
-  }
-
-  private _insertIntoChildren(p: Particle): boolean {
-    return (
-      this.northeast!.insert(p) ||
-      this.northwest!.insert(p) ||
-      this.southeast!.insert(p) ||
-      this.southwest!.insert(p)
-    );
-  }
-
-  insert(p: Particle): boolean {
-    if (!this.boundary.contains(p)) {
-      return false;
-    }
-
-    if (this.divided) {
-      return this._insertIntoChildren(p);
-    }
-
-    if (this.particles.length < this.capacity) {
-      this.particles.push(p);
-      return true;
-    }
-
-    this.subdivide();
-    return this._insertIntoChildren(p);
-  }
-
-  query(range: Rectangle, found: Particle[]): Particle[] {
-    if (!this.boundary.intersects(range)) {
-      return found;
-    }
-
-    if (this.divided) {
-      this.northwest!.query(range, found);
-      this.northeast!.query(range, found);
-      this.southwest!.query(range, found);
-      this.southeast!.query(range, found);
-    } else {
-      for (const p of this.particles) {
-        if (range.contains(p)) {
-          found.push(p);
-        }
-      }
-    }
-
-    return found;
   }
 
   /**
@@ -120,11 +55,14 @@ export class QuadTreeKeep {
         this._collapse();
       }
     } else {
-      for (let i = this.particles.length - 1; i >= 0; i--) {
+      for (let i = 0; i < this.particles.length; i++) {
         const p = this.particles[i];
+
         if (!this.boundary.contains(p)) {
           moved.push(p);
-          this.particles.splice(i, 1);
+
+          const last = this.particles.pop()!;
+          if (last !== p) this.particles[i--] = last;
         }
       }
     }
