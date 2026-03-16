@@ -50,45 +50,38 @@ export class QuadTreeKeep extends QuadTree {
       this.southwest!._collectMoved(moved);
 
       // Attempt to collapse branches if they're sparsely populated
-      const totalCount = this.count();
-      if (totalCount <= this.capacity) {
-        this._collapse();
-      }
-    } else {
-      for (let i = 0; i < this.particles.length; i++) {
-        const p = this.particles[i];
+      if (!this.northeast!.divided && !this.northwest!.divided &&
+          !this.southeast!.divided && !this.southwest!.divided) {
+        const totalCount = this.northeast!.particles.length + 
+                           this.northwest!.particles.length + 
+                           this.southeast!.particles.length + 
+                           this.southwest!.particles.length;
+        
+        if (totalCount <= this.capacity) {
+          this.particles.push(...this.northeast!.particles);
+          this.particles.push(...this.northwest!.particles);
+          this.particles.push(...this.southeast!.particles);
+          this.particles.push(...this.southwest!.particles);
+          
+          this.northeast = null;
+          this.northwest = null;
+          this.southeast = null;
+          this.southwest = null;
 
-        if (!this.boundary.contains(p)) {
-          moved.push(p);
-
-          const last = this.particles.pop()!;
-          if (last !== p) this.particles[i--] = last;
+          this.divided = false;
         }
       }
-    }
-  }
-
-  private _collapse(): void {
-    const allParticles: Particle[] = [];
-    this._getAllParticles(allParticles);
-    this.particles = allParticles;
-    this.divided = false;
-    
-    // Clear out children to allow garbage collection
-    this.northeast = null;
-    this.northwest = null;
-    this.southeast = null;
-    this.southwest = null;
-  }
-
-  private _getAllParticles(out: Particle[]): void {
-    if (this.divided) {
-      this.northeast!._getAllParticles(out);
-      this.northwest!._getAllParticles(out);
-      this.southeast!._getAllParticles(out);
-      this.southwest!._getAllParticles(out);
     } else {
-      out.push(...this.particles);
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        if (!this.boundary.contains(p)) {
+          moved.push(p);
+          const last = this.particles.pop()!;
+          if (i < this.particles.length) {
+            this.particles[i] = last;
+          }
+        }
+      }
     }
   }
 
@@ -107,6 +100,11 @@ let persistentTree: QuadTreeKeep | null = null;
  * Efficient broad-phase collision evaluator using a persistent spatial partition structure.
  */
 export async function processAllCollidingPairsKeep(engine: Engine, callback: (p1: Particle, p2: Particle) => void | Promise<void>): Promise<void> {
+  // Detect settings update
+  if (engine.bucketSize !== persistentTree?.capacity) {
+    persistentTree = null; // force rebuild with new capacity
+  }
+  
   const particles = engine.particles;
   if (particles.length === 0) return;
 

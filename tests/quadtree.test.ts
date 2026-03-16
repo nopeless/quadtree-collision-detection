@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Particle, Engine } from '../src/javascript/engine';
-import { QuadTree, Rectangle, processAllCollidingPairs as evaluateQuadtree } from '../src/javascript/quadtree';
+import { Particle, Rectangle, Engine } from '../src/javascript/engine';
+import { QuadTree, processAllCollidingPairs as evaluateQuadtree } from '../src/javascript/quadtree';
 
 describe('QuadTree structural logic', () => {
     it('creates tree bounds and stores particles within capacity', () => {
