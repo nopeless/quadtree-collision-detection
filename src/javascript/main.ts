@@ -84,6 +84,8 @@ function render() {
   }
 }
 
+const MAX_TPS = 500;
+
 /**
  * Continuous simulation event loop.
  */
@@ -92,12 +94,13 @@ function render() {
   resize(); // sets canvas sizing and runs initializeSimulation()
 
   setInterval(() => {
-    tpsDisplay.textContent = `TPS: ${tpsCounter}`;
+    tpsDisplay.textContent = `TPS: ${tpsCounter} / ${MAX_TPS}`;
     tpsCounter = 0;
   }, 1000);
 
+  let nextFrame = Date.now() + 1000 / MAX_TPS;
+
   while (isRunning) {
-    const start = Date.now();
     const algo = algoSelect.value;
     const bucketSize = parseInt(bucketSelect.value, 10);
 
@@ -123,8 +126,12 @@ function render() {
       render();
     }
 
-    // Max 100 TPS
-    await sleep(10 - (Date.now() - start));
+    // wait until next frame tick
+    const now = Date.now();
+    await sleep(nextFrame - now);
+
+    // If we're running behind
+    nextFrame = Math.max(nextFrame + 1000 / MAX_TPS, now);
   }
 })();
 
