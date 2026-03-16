@@ -19,6 +19,41 @@ export class Vector2 {
 }
 
 /**
+ * Axis-Aligned Bounding Box (AABB).
+ */
+export class Rectangle {
+  centerX: number;
+  centerY: number;
+  halfW: number;
+  halfH: number;
+
+  constructor(centerX: number, centerY: number, halfW: number, halfH: number) {
+    this.centerX = centerX;
+    this.centerY = centerY;
+    this.halfW = halfW;
+    this.halfH = halfH;
+  }
+
+  contains(p: Particle): boolean {
+    return (
+      p.pos.x >= this.centerX - this.halfW &&
+      p.pos.x <= this.centerX + this.halfW &&
+      p.pos.y >= this.centerY - this.halfH &&
+      p.pos.y <= this.centerY + this.halfH
+    );
+  }
+
+  intersects(range: Rectangle): boolean {
+    return !(
+      range.centerX - range.halfW > this.centerX + this.halfW ||
+      range.centerX + range.halfW < this.centerX - this.halfW ||
+      range.centerY - range.halfH > this.centerY + this.halfH ||
+      range.centerY + range.halfH < this.centerY - this.halfH
+    );
+  }
+}
+
+/**
  * Rigid circular body.
  */
 export class Particle {
@@ -28,7 +63,7 @@ export class Particle {
   mass: number;
   color: string;
 
-  constructor(x: number, y: number, r: number, vx: number, vy: number, color: string = 'white') {
+  constructor(x: number, y: number, r: number, vx: number, vy: number, color: string) {
     this.pos = new Vector2(x, y);
     this.vel = new Vector2(vx, vy);
     this.radius = r;
@@ -169,12 +204,12 @@ export class Engine {
     ctx.stroke();
     ctx.closePath();
 
-    const drawLeaf = (tree: any) => {
+    const drawLeaf = (tree: QuadTree) => {
       // Boundaries are represented by centers and half-widths, so we convert to top-left to draw
-      let minX = Math.floor(tree.boundary.x - tree.boundary.w) + .5;
-      let minY = Math.floor(tree.boundary.y - tree.boundary.h) + .5;
-      let maxX = Math.floor(tree.boundary.x + tree.boundary.w) + .5;
-      let maxY = Math.floor(tree.boundary.y + tree.boundary.h) + .5;
+      let minX = Math.floor(tree.boundary.centerX - tree.boundary.halfW) + .5;
+      let minY = Math.floor(tree.boundary.centerY - tree.boundary.halfH) + .5;
+      let maxX = Math.floor(tree.boundary.centerX + tree.boundary.halfW) + .5;
+      let maxY = Math.floor(tree.boundary.centerY + tree.boundary.halfH) + .5;
 
       // Draw only top and left edges
       ctx.beginPath();
@@ -185,10 +220,10 @@ export class Engine {
       ctx.closePath();
 
       if (tree.divided) {
-        drawLeaf(tree.northeast);
-        drawLeaf(tree.northwest);
-        drawLeaf(tree.southeast);
-        drawLeaf(tree.southwest);
+        drawLeaf(tree.northeast!);
+        drawLeaf(tree.northwest!);
+        drawLeaf(tree.southeast!);
+        drawLeaf(tree.southwest!);
       }
     };
 

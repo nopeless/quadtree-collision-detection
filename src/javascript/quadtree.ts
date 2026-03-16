@@ -1,39 +1,4 @@
-import { Particle, Engine } from './engine';
-
-/**
- * Axis-Aligned Bounding Box (AABB).
- */
-export class Rectangle {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-
-  constructor(x: number, y: number, w: number, h: number) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-  }
-
-  contains(p: Particle): boolean {
-    return (
-      p.pos.x >= this.x - this.w &&
-      p.pos.x <= this.x + this.w &&
-      p.pos.y >= this.y - this.h &&
-      p.pos.y <= this.y + this.h
-    );
-  }
-
-  intersects(range: Rectangle): boolean {
-    return !(
-      range.x - range.w > this.x + this.w ||
-      range.x + range.w < this.x - this.w ||
-      range.y - range.h > this.y + this.h ||
-      range.y + range.h < this.y - this.h
-    );
-  }
-}
+import { Particle, Engine, Rectangle } from './engine';
 
 /**
  * Recursive spatial partitioning structure.
@@ -45,34 +10,39 @@ export class QuadTree {
   particles: Particle[];
   divided: boolean;
 
-  northeast!: QuadTree;
-  northwest!: QuadTree;
-  southeast!: QuadTree;
-  southwest!: QuadTree;
+  northeast!: null | QuadTree;
+  northwest!: null | QuadTree;
+  southeast!: null | QuadTree;
+  southwest!: null | QuadTree;
 
   constructor(boundary: Rectangle, capacity: number) {
     this.boundary = boundary;
     this.capacity = capacity;
     this.particles = [];
     this.divided = false;
+
+    this.northeast = null;
+    this.northwest = null;
+    this.southeast = null;
+    this.southwest = null;
   }
 
   subdivide(): void {
-    const x = this.boundary.x;
-    const y = this.boundary.y;
-    const w = this.boundary.w / 2;
-    const h = this.boundary.h / 2;
+    const cx = this.boundary.centerX;
+    const cy = this.boundary.centerY;
+    const hw = this.boundary.halfW / 2;
+    const hh = this.boundary.halfH / 2;
 
-    const ne = new Rectangle(x + w, y - h, w, h);
+    const ne = new Rectangle(cx + hw, cy - hh, hw, hh);
     this.northeast = new QuadTree(ne, this.capacity);
 
-    const nw = new Rectangle(x - w, y - h, w, h);
+    const nw = new Rectangle(cx - hw, cy - hh, hw, hh);
     this.northwest = new QuadTree(nw, this.capacity);
 
-    const se = new Rectangle(x + w, y + h, w, h);
+    const se = new Rectangle(cx + hw, cy + hh, hw, hh);
     this.southeast = new QuadTree(se, this.capacity);
 
-    const sw = new Rectangle(x - w, y + h, w, h);
+    const sw = new Rectangle(cx - hw, cy + hh, hw, hh);
     this.southwest = new QuadTree(sw, this.capacity);
 
     this.divided = true;
@@ -103,10 +73,10 @@ export class QuadTree {
       this.subdivide();
     }
 
-    if (this.northeast.insert(p)) return true;
-    if (this.northwest.insert(p)) return true;
-    if (this.southeast.insert(p)) return true;
-    if (this.southwest.insert(p)) return true;
+    if (this.northeast!.insert(p)) return true;
+    if (this.northwest!.insert(p)) return true;
+    if (this.southeast!.insert(p)) return true;
+    if (this.southwest!.insert(p)) return true;
 
     return false;
   }
@@ -123,10 +93,10 @@ export class QuadTree {
     }
 
     if (this.divided) {
-      this.northwest.query(range, found);
-      this.northeast.query(range, found);
-      this.southwest.query(range, found);
-      this.southeast.query(range, found);
+      this.northwest!.query(range, found);
+      this.northeast!.query(range, found);
+      this.southwest!.query(range, found);
+      this.southeast!.query(range, found);
     }
 
     return found;
@@ -140,12 +110,13 @@ export async function processAllCollidingPairs(engine: Engine, callback: (p1: Pa
   const particles = engine.particles;
   if (particles.length === 0) return;
 
-  const cx = engine.width / 2;
-  const cy = engine.height / 2;
-  const w = engine.width / 2;
-  const h = engine.height / 2;
+  const centerX = engine.width / 2;
+  const centerY = engine.height / 2;
+  const halfW = engine.width / 2;
+  const halfH = engine.height / 2;
 
-  const boundary = new Rectangle(cx, cy, w, h);
+  const boundary = new Rectangle(centerX, centerY, halfW, halfH);
+
   const qtree = new QuadTree(boundary, engine.bucketSize || 4);
   engine.initQuadTree(qtree);
 
@@ -163,7 +134,11 @@ export async function processAllCollidingPairs(engine: Engine, callback: (p1: Pa
     // Narrow-phase scalar elastic processing
     for (const other of candidates) {
       if (p !== other) {
-        await callback(p, other);
+        const r = callback(p, other);
+        
+        if (r instanceof Promise) {
+          await r;
+        }
       }
     }
   }

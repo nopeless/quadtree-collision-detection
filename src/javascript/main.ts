@@ -1,6 +1,7 @@
 import { Particle, Engine } from './engine';
 import { processAllCollidingPairs as evaluateNaive } from './naive';
 import { processAllCollidingPairs as evaluateQuadtree } from './quadtree';
+import { processAllCollidingPairsKeep as evaluateQuadtreeKeep } from './quadtree-keep';
 
 // Element References 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -55,8 +56,7 @@ function initializeSimulation() {
     const vx = Math.cos(angle) * speed;
     const vy = Math.sin(angle) * speed;
 
-    const hue = Math.floor(Math.random() * 360);
-    const color = `hsl(${hue}, 80%, 60%)`;
+    const color = "#" + Math.floor(Math.random() * 2 ** 12).toString(16).padStart(3, '0');
 
     particles.push(new Particle(x, y, r, vx, vy, color));
   }
@@ -111,8 +111,10 @@ function runPhysicsLoop() {
       if (algo === 'naive') {
         engine.initQuadTree(null);
         engine.setProcessor(evaluateNaive);
-      } else {
+      } else if (algo === 'quadtree') {
         engine.setProcessor(evaluateQuadtree);
+      } else if (algo === 'quadtree-keep') {
+        engine.setProcessor(evaluateQuadtreeKeep);
       }
       engine.bucketSize = bucketSize;
 

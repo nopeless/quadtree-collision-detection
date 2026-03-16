@@ -19,7 +19,11 @@ export async function processAllCollidingPairs(engine: Engine, callback: (p1: Pa
         continue;
       }
 
-      await callback(particles[i], particles[j]);
+      const r = callback(particles[i], particles[j]);
+    
+      if (r instanceof Promise) {
+        await r;
+      }
     }
   }
 }
