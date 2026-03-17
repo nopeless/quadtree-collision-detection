@@ -61,19 +61,19 @@ export class QuadTree {
   subdivide(): void {
     const cx = this.boundary.centerX;
     const cy = this.boundary.centerY;
-    const hw = this.boundary.halfW / 2;
-    const hh = this.boundary.halfH / 2;
+    const hw = this.boundary.halfW;
+    const hh = this.boundary.halfH;
 
-    const ne = new Rectangle(cx + hw, cy - hh, hw, hh);
+    const ne = new Rectangle(cx + hw / 2, cy - hh / 2, hw / 2, hh / 2);
     this.northeast = new QuadTree(ne, this.capacity) as this;
 
-    const nw = new Rectangle(cx - hw, cy - hh, hw, hh);
+    const nw = new Rectangle(cx - hw / 2, cy - hh / 2, hw / 2, hh / 2);
     this.northwest = new QuadTree(nw, this.capacity) as this;
 
-    const se = new Rectangle(cx + hw, cy + hh, hw, hh);
+    const se = new Rectangle(cx + hw / 2, cy + hh / 2, hw / 2, hh / 2);
     this.southeast = new QuadTree(se, this.capacity) as this;
 
-    const sw = new Rectangle(cx - hw, cy + hh, hw, hh);
+    const sw = new Rectangle(cx - hw / 2, cy + hh / 2, hw / 2, hh / 2);
     this.southwest = new QuadTree(sw, this.capacity) as this;
 
     this.divided = true;
