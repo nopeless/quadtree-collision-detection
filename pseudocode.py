@@ -34,11 +34,10 @@ class QuadTree:
         """
         pass
 
-    def query(self, rect, found):
+    def query(self, rect):
         """
-        1. If boundary doesn't intersect, return found array
-        2. If divided, query deeper quadtrees return found array
-        3. Iterate over self.points and push in found array if rect contains the point
-        4. return found array
+        1. If boundary doesn't intersect, return empty array
+        2. If divided, query deeper quadtrees return combined array
+        3. Return all points that are within rect
         """
         pass
