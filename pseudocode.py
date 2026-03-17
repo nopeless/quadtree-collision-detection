@@ -1,10 +1,3 @@
-class Point:
-    def __init__(self, x, y, data):
-        self.x = x
-        self.y = y
-        self.data = data  # The 'particle' or 'robot'
-
-
 class QuadTree:
     def __init__(self, boundary, capacity):
         self.boundary = boundary  # A Rectangle (x, y, w, h)
