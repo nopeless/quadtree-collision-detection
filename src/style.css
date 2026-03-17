@@ -7,7 +7,7 @@ body {
 }
 
 .controls {
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: large;
 
   top: 1px;
@@ -16,10 +16,9 @@ body {
   position: absolute;
   background: rgba(34, 34, 34, 0.8);
   padding: 15px 30px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  z-index: 10;
+
+  display: grid;
+  gap: 5px;
 }
 
 .controls a {
