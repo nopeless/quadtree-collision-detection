@@ -107,7 +107,6 @@ export function processAllCollidingPairsKeep(engine: Engine, callback: (p1: Part
   }
 
   const particles = engine.particles;
-  if (particles.length === 0) return;
 
   const centerX = engine.width / 2;
   const centerY = engine.height / 2;
