@@ -61,6 +61,9 @@ export class QuadTree {
   }
 
   _insertIntoChildren(p: Particle): boolean {
+    /**
+     * Short circuiting behavior
+     */
     return (
       this.northeast!.insert(p) ||
       this.northwest!.insert(p) ||
@@ -103,7 +106,7 @@ export class QuadTree {
 
     for (let i = 0; i < this.particles.length; i++) {
       if (range.contains(this.particles[i])) {
-      found.push(this.particles[i]);
+        found.push(this.particles[i]);
       }
     }
 
