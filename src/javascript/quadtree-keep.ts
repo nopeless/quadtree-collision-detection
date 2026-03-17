@@ -116,7 +116,7 @@ export function processAllCollidingPairsKeep(engine: Engine, callback: (p1: Part
 
   if (!persistentTree || persistentTree.boundary.halfW !== halfW || persistentTree.boundary.halfH !== halfH) {
     const boundary = new Rectangle(centerX, centerY, halfW, halfH);
-    persistentTree = new QuadTreeKeep(boundary, engine.bucketSize || 4);
+    persistentTree = new QuadTreeKeep(boundary, engine.capacity);
 
     for (let i = 0; i < particles.length; i++) {
       persistentTree.insert(particles[i]);

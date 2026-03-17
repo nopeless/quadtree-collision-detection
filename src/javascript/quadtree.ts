@@ -124,7 +124,7 @@ export function processAllCollidingPairs(engine: Engine, callback: (p1: Particle
 
   const boundary = new Rectangle(centerX, centerY, halfW, halfH);
 
-  const qtree = new QuadTree(boundary, engine.bucketSize || 4);
+  const qtree = new QuadTree(boundary, engine.capacity);
   engine.initQuadTree(qtree);
 
   // Build tree from spatial coordinates

@@ -25,7 +25,7 @@ Instead of looping $N$ times against $N$ items, the Quadtree recursively decompo
 Use the interface to directly benchmark the algorithms in real-time under changing spatial constraints:
 
 - **Implementation:** Toggle between the baseline $O(n^2)$ approach and the QuadTree optimization.
-- **Bucket Size:** Capacity threshold before a QuadTree node dynamically subdivides.
+- **Capacity:** Capacity threshold before a QuadTree node dynamically subdivides.
 - **Particles:** Modify the active object count.
 - **Speed:** Modify speed of particles.
 - **Playback & Stepping:** Halt execution and advance the simulation one tick.

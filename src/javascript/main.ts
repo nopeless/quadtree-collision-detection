@@ -10,7 +10,7 @@ ctx.imageSmoothingEnabled = false;
 const tpsDisplay = document.getElementById('tpsDisplay') as HTMLDivElement;
 const algoSelect = document.getElementById('algorithm') as HTMLSelectElement;
 const countSelect = document.getElementById('particleCount') as HTMLSelectElement;
-const bucketSelect = document.getElementById('bucketSize') as HTMLSelectElement;
+const capacitySelect = document.getElementById('capacity') as HTMLSelectElement;
 const speedSelect = document.getElementById('speed') as HTMLSelectElement;
 const playPauseBtn = document.getElementById('playPauseBtn') as HTMLButtonElement;
 const stepBtn = document.getElementById('stepBtn') as HTMLButtonElement;
@@ -77,7 +77,7 @@ const colors = [
 function initializeSimulation() {
   const count = parseInt(countSelect.value, 10);
   const speed = parseFloat(speedSelect.value);
-  const bucketSize = parseInt(bucketSelect.value, 10);
+  const capacity = parseInt(capacitySelect.value, 10);
   const particles: Particle[] = [];
   const radius = 4;
 
@@ -99,7 +99,7 @@ function initializeSimulation() {
   if (engine) {
     engine.particles = particles;
     engine.maxRadius = radius;
-    engine.bucketSize = bucketSize;
+    engine.capacity = capacity;
     engine.dirty = true;
   }
 }
@@ -187,7 +187,7 @@ stepBtn.addEventListener('click', () => {
     }
 });
 
-bucketSelect.addEventListener('change', () => {
+capacitySelect.addEventListener('change', () => {
     initializeSimulation();
 });
 

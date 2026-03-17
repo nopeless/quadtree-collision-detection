@@ -185,7 +185,7 @@ export class Engine {
   height: number = 0;
   maxRadius: number = 0;
   processor: CollisionProcessor;
-  bucketSize: number = 4;
+  capacity: number = 4;
   qtree: QuadTree | null = null;
   dirty = false;
 
