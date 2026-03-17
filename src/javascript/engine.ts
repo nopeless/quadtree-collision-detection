@@ -94,7 +94,7 @@ export function collideParticles(
   const dist = Math.hypot(dx, dy);
 
   // Check for contact
-  if (dist > p1.radius + p2.radius || dist === 0) {
+  if (dist >= p1.radius + p2.radius || dist === 0) {
     return; 
   }
 
@@ -166,7 +166,7 @@ export function resolveBoundaries(p: Particle, width: number, height: number): v
 /**
  * Functional signature for collision evaluation algorithms.
  */
-export type CollisionProcessor = (engine: Engine, callback: (p1: Particle, p2: Particle) => void | Promise<void>) => Promise<void>;
+export type CollisionProcessor = (engine: Engine, callback: (p1: Particle, p2: Particle) => void) => void;
 
 /**
  * Execution context for simulation state.
@@ -179,6 +179,7 @@ export class Engine {
   processor: CollisionProcessor;
   bucketSize: number = 4;
   qtree: QuadTree | null = null;
+  dirty = false;
 
   constructor(processor: CollisionProcessor, particles: Particle[] = [], maxRadius: number = 0) {
     this.processor = processor;
@@ -234,13 +235,13 @@ export class Engine {
     this.processor = processor;
   }
 
-  async tick(): Promise<void> {
+  tick() {
     for (const p of this.particles) {
       updateParticle(p);
       resolveBoundaries(p, this.width, this.height);
     }
 
-    await this.processor(this, collideParticles);
+    this.processor(this, collideParticles);
   }
 }
 

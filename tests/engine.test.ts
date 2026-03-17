@@ -36,14 +36,14 @@ describe('Particle physics mechanics', () => {
 });
 
 describe('Engine functionality', () => {
-    it('executes dependency injected evaluator correctly', async () => {
+    it('executes dependency injected evaluator correctly', () => {
         const mockProcessor = vi.fn();
         const engine = new Engine(mockProcessor);
         engine.width = 100;
         engine.height = 100;
         engine.particles = [new Particle(0,0,5,0,0)];
 
-        await engine.tick();
+        engine.tick();
         expect(mockProcessor).toHaveBeenCalledWith(engine, collideParticles); 
 
     });

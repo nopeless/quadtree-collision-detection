@@ -37,26 +37,61 @@ function resize() {
 
 window.addEventListener('resize', resize);
 
+const colors = [
+  // Primary
+  "#f00",
+  "#0f0",
+  "#00f",
+  "#ff0",
+  "#0ff",
+  "#f0f",
+
+  // Half
+  "#800",
+  "#080",
+  "#008",
+  "#880",
+  "#088",
+  "#808",
+
+  // Upper half
+  "#f88",
+  "#8f8",
+  "#88f",
+  "#ff8",
+  "#8ff",
+  "#f8f",
+
+  // Mixed
+  "#f80",
+  "#0f8",
+  "#08f",
+  "#f08",
+  "#8f0",
+  "#80f",
+];
+
 /**
  * Instantiates the physical simulation environment.
  */
 function initializeSimulation() {
   const count = parseInt(countSelect.value, 10);
   const speed = parseFloat(speedSelect.value);
+  const bucketSize = parseInt(bucketSelect.value, 10);
   const particles: Particle[] = [];
   const radius = 4;
 
   for (let i = 0; i < count; i++) {
     const r = radius;
-    // ensure within bounds
-    const x = r + Math.random() * (canvas.width - r * 2);
-    const y = r + Math.random() * (canvas.height - r * 2);
+    // ensure within bounds, make it slightly biased towards top right corner
+    const x = r + Math.sqrt(Math.random()) * (canvas.width - r * 2);
+    const y = r + Math.sqrt(Math.random()) * (canvas.height - r * 2);
 
     const angle = Math.random() * Math.PI * 2;
     const vx = Math.cos(angle) * speed;
     const vy = Math.sin(angle) * speed;
 
-    const color = "#" + Math.floor(Math.random() * 2 ** 12).toString(16).padStart(3, '0');
+    const color = colors[i % colors.length];
 
     particles.push(new Particle(x, y, r, vx, vy, color));
   }
@@ -64,6 +99,8 @@ function initializeSimulation() {
   if (engine) {
     engine.particles = particles;
     engine.maxRadius = radius;
+    engine.bucketSize = bucketSize;
+    engine.dirty = true;
   }
 }
 
@@ -77,7 +114,8 @@ function render() {
 
   engine.drawQuadTree(ctx);
 
-  for (const p of engine.particles) {
+  for (let i = 0; i < engine.particles.length; i++) {
+    const p = engine.particles[i];
     ctx.beginPath();
     ctx.arc(p.pos.x, p.pos.y, p.radius, 0, Math.PI * 2);
     ctx.fillStyle = p.color;
@@ -105,7 +143,6 @@ function runPhysicsLoop() {
     if (!isRunning) return;
 
     const algo = algoSelect.value;
-    const bucketSize = parseInt(bucketSelect.value, 10);
 
     if (!isPaused || stepRequested) {
       if (algo === 'naive') {
@@ -116,10 +153,9 @@ function runPhysicsLoop() {
       } else if (algo === 'quadtree-keep') {
         engine.setProcessor(evaluateQuadtreeKeep);
       }
-      engine.bucketSize = bucketSize;
 
       const tickStart = performance.now();
-      await engine.tick();
+      engine.tick();
       const currentTickMs = performance.now() - tickStart;
       tickMs += currentTickMs;
       tickCount++;
@@ -154,6 +190,10 @@ stepBtn.addEventListener('click', () => {
     if (isPaused) {
         stepRequested = true;
     }
+});
+
+bucketSelect.addEventListener('change', () => {
+    initializeSimulation();
 });
 
 countSelect.addEventListener('change', () => {

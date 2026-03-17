@@ -46,7 +46,7 @@ describe('QuadTree structural logic', () => {
 });
 
 describe('QuadTree Evaluator Physics Processing', () => {
-    it('evaluates and resolves bounds using Broad + Narrow phase correctly', async () => {
+    it('evaluates and resolves bounds using Broad + Narrow phase correctly', () => {
         const p1 = new Particle(10, 10, 5, 2, 0); // Moving mostly right
         const p2 = new Particle(25, 10, 5, -2, 0); // Moving left
 
@@ -60,7 +60,7 @@ describe('QuadTree Evaluator Physics Processing', () => {
         p1.pos.x = 12;
         p2.pos.x = 23;
 
-        await engine.tick();
+        engine.tick();
 
         // Simulation step calculates discrete position displacement and resolves resulting boundaries.
         expect(p1.vel.x).toBeCloseTo(-2);

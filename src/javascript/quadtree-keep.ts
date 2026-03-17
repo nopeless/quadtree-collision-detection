@@ -99,10 +99,11 @@ let persistentTree: QuadTreeKeep | null = null;
 /**
  * Efficient broad-phase collision evaluator using a persistent spatial partition structure.
  */
-export async function processAllCollidingPairsKeep(engine: Engine, callback: (p1: Particle, p2: Particle) => void | Promise<void>): Promise<void> {
+export function processAllCollidingPairsKeep(engine: Engine, callback: (p1: Particle, p2: Particle) => void) {
   // Detect settings update
-  if (engine.bucketSize !== persistentTree?.capacity) {
-    persistentTree = null; // force rebuild with new capacity
+  if (engine.dirty) {
+    persistentTree = null; // force rebuild
+    engine.dirty = false
   }
   
   const particles = engine.particles;
@@ -117,8 +118,8 @@ export async function processAllCollidingPairsKeep(engine: Engine, callback: (p1
     const boundary = new Rectangle(centerX, centerY, halfW, halfH);
     persistentTree = new QuadTreeKeep(boundary, engine.bucketSize || 4);
     
-    for (const p of particles) {
-      persistentTree.insert(p);
+    for (let i = 0; i < particles.length; i++) {
+      persistentTree.insert(particles[i]);
     }
   } else {
     // Fast path: simply update the existing tree structure
@@ -128,19 +129,20 @@ export async function processAllCollidingPairsKeep(engine: Engine, callback: (p1
   engine.initQuadTree(persistentTree as any);
 
   // Broad-phase bounds finding via Quadtree
-  for (const p of particles) {
+  const seen = new Set<Particle>();
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    seen.add(p);
+    
     const searchArea = p.radius + engine.maxRadius;
     const range = new Rectangle(p.pos.x, p.pos.y, searchArea, searchArea);
     const candidates = persistentTree.query(range, []);
 
     // Narrow-phase scalar elastic processing
-    for (const other of candidates) {
-      if (p !== other) {
-        const r = callback(p, other);
-        
-        if (r instanceof Promise) {
-          await r;
-        }
+    for (let j = 0; j < candidates.length; j++) {
+      const other = candidates[j];
+      if (!seen.has(other)) {
+        callback(p, other);
       }
     }
   }

@@ -101,9 +101,9 @@ export class QuadTree {
       return found;
     }
 
-    for (const p of this.particles) {
-      if (range.contains(p)) {
-        found.push(p);
+    for (let i = 0; i < this.particles.length; i++) {
+      if (range.contains(this.particles[i])) {
+      found.push(this.particles[i]);
       }
     }
 
@@ -114,7 +114,7 @@ export class QuadTree {
 /**
  * Efficient broad-phase collision evaluator utilizing spatial partitioning.
  */
-export async function processAllCollidingPairs(engine: Engine, callback: (p1: Particle, p2: Particle) => void | Promise<void>): Promise<void> {
+export function processAllCollidingPairs(engine: Engine, callback: (p1: Particle, p2: Particle) => void) {
   const particles = engine.particles;
   if (particles.length === 0) return;
 
@@ -129,24 +129,25 @@ export async function processAllCollidingPairs(engine: Engine, callback: (p1: Pa
   engine.initQuadTree(qtree);
 
   // Build tree from spatial coordinates
-  for (const p of particles) {
-    qtree.insert(p);
+  for (let i = 0; i < particles.length; i++) {
+    qtree.insert(particles[i]);
   }
 
   // Broad-phase bounds finding via Quadtree
-  for (const p of particles) {
+  const seen = new Set<Particle>();
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    seen.add(p);
+
     const searchArea = p.radius + engine.maxRadius;
     const range = new Rectangle(p.pos.x, p.pos.y, searchArea, searchArea);
     const candidates = qtree.query(range, []);
 
     // Narrow-phase scalar elastic processing
-    for (const other of candidates) {
-      if (p !== other) {
-        const r = callback(p, other);
-        
-        if (r instanceof Promise) {
-          await r;
-        }
+    for (let j = 0; j < candidates.length; j++) {
+      const other = candidates[j];
+      if (!seen.has(other)) {
+        callback(p, other);
       }
     }
   }
