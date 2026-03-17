@@ -114,22 +114,13 @@ function render() {
 
   engine.drawQuadTree(ctx);
 
-  if (engine.particles.length <= 5_000) {
-    for (let i = 0; i < engine.particles.length; i++) {
-      const p = engine.particles[i];
-      ctx.beginPath();
-      ctx.arc(p.pos.x, p.pos.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
-      ctx.closePath();
-    }
-  } else {
-    // For very large counts, use a single pixel for better performance
-    for (let i = 0; i < engine.particles.length; i++) {
-      const p = engine.particles[i];
-      ctx.fillStyle = p.color;
-      ctx.fillRect(p.pos.x, p.pos.y, p.radius, p.radius);
-    }
+  for (let i = 0; i < engine.particles.length; i++) {
+    const p = engine.particles[i];
+    ctx.beginPath();
+    ctx.arc(p.pos.x, p.pos.y, p.radius, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.closePath();
   }
 }
 
