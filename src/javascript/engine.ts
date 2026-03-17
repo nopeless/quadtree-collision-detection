@@ -197,35 +197,34 @@ export class Engine {
     ctx.lineWidth = 1;
     ctx.strokeStyle = '#ddd';
 
-    // draw root bottom and right edges
-    ctx.beginPath();
-    ctx.moveTo(0, this.height - 0.5);
-    ctx.lineTo(this.width - 0.5, this.height - 0.5);
-    ctx.lineTo(this.width - 0.5, 0);
-    ctx.stroke();
-    ctx.closePath();
+    // Draw root container
+    ctx.rect(
+      0.5, 0.5, this.width - 0.5, this.height - 0.5
+    )
 
     const drawLeaf = (tree: QuadTree) => {
-      // Boundaries are represented by centers and half-widths, so we convert to top-left to draw
-      let minX = Math.floor(tree.boundary.centerX - tree.boundary.halfW) + .5;
-      let minY = Math.floor(tree.boundary.centerY - tree.boundary.halfH) + .5;
-      let maxX = Math.floor(tree.boundary.centerX + tree.boundary.halfW) + .5;
-      let maxY = Math.floor(tree.boundary.centerY + tree.boundary.halfH) + .5;
+      if (!tree.divided) return;
 
-      // Draw only top and left edges
+      const x = Math.floor(tree.boundary.centerX - tree.boundary.halfW) + 0.5;
+      const y = Math.floor(tree.boundary.centerY - tree.boundary.halfH) + 0.5;
+      const w = Math.floor(tree.boundary.halfW * 2) + 0.5;
+      const h = Math.floor(tree.boundary.halfH * 2) + 0.5;
+
+      const cx = Math.floor(tree.boundary.centerX) + 0.5;
+      const cy = Math.floor(tree.boundary.centerY) + 0.5;
+
+      // Draw middle cross
       ctx.beginPath();
-      ctx.moveTo(minX, maxY);
-      ctx.lineTo(minX, minY);
-      ctx.lineTo(maxX, minY);
+      ctx.moveTo(cx, y);
+      ctx.lineTo(cx, y + h);
+      ctx.moveTo(x, cy);
+      ctx.lineTo(x + w, cy);
       ctx.stroke();
-      ctx.closePath();
 
-      if (tree.divided) {
-        drawLeaf(tree.northeast!);
-        drawLeaf(tree.northwest!);
-        drawLeaf(tree.southeast!);
-        drawLeaf(tree.southwest!);
-      }
+      drawLeaf(tree.northeast!);
+      drawLeaf(tree.northwest!);
+      drawLeaf(tree.southeast!);
+      drawLeaf(tree.southwest!);
     };
 
     drawLeaf(this.qtree);

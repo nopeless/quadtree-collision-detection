@@ -16,7 +16,7 @@ const playPauseBtn = document.getElementById('playPauseBtn') as HTMLButtonElemen
 const stepBtn = document.getElementById('stepBtn') as HTMLButtonElement;
 
 // State Variables 
-let engine: Engine;
+const engine = new Engine(evaluateNaive);
 let isRunning = true;
 let isPaused = false;
 let stepRequested = false;
@@ -124,61 +124,56 @@ function render() {
   }
 }
 
-/**
- * Continuous simulation event loop.
- */
-function runPhysicsLoop() {
-  engine = new Engine(evaluateNaive);
-  resize(); // sets canvas sizing and runs initializeSimulation()
+resize(); // sets canvas sizing and runs initializeSimulation()
 
-  setInterval(() => {
-    const avg = tickCount === 0 ? 0 : tickMs / tickCount;
-    tpsDisplay.textContent = `FPS: ${fpsCounter} / Avg Tick: ${avg.toFixed(2)}ms`;
-    fpsCounter = 0;
-    tickCount = 0;
-    tickMs = 0;
-  }, 1000);
+setInterval(() => {
+  const avg = tickCount === 0 ? 0 : tickMs / tickCount;
+  tpsDisplay.textContent = `FPS: ${fpsCounter} / Avg Tick: ${avg.toFixed(2)}ms`;
+  fpsCounter = 0;
+  tickCount = 0;
+  tickMs = 0;
+}, 1000);
 
-  async function loop() {
-    if (!isRunning) return;
+function loop() {
+  if (!isRunning) return;
 
-    const algo = algoSelect.value;
+  const algo = algoSelect.value;
 
-    if (!isPaused || stepRequested) {
-      if (algo === 'naive') {
-        engine.initQuadTree(null);
-        engine.setProcessor(evaluateNaive);
-      } else if (algo === 'quadtree') {
-        engine.setProcessor(evaluateQuadtree);
-      } else if (algo === 'quadtree-keep') {
-        engine.setProcessor(evaluateQuadtreeKeep);
-      }
-
-      const tickStart = performance.now();
-      engine.tick();
-      const currentTickMs = performance.now() - tickStart;
-      tickMs += currentTickMs;
-      tickCount++;
-      
-      render();
-
-      if (stepRequested) {
-        stepRequested = false;
-      }
-
-      fpsCounter++;
-    } else {
-      // Just render the current state when paused (in case we resize or change colors)
-      render();
+  if (!isPaused || stepRequested) {
+    if (algo === 'naive') {
+      engine.initQuadTree(null);
+      engine.setProcessor(evaluateNaive);
+    } else if (algo === 'quadtree') {
+      engine.setProcessor(evaluateQuadtree);
+    } else if (algo === 'quadtree-keep') {
+      engine.setProcessor(evaluateQuadtreeKeep);
     }
 
-    requestAnimationFrame(loop);
-  }
+    const tickStart = performance.now();
+    engine.tick();
+    const currentTickMs = performance.now() - tickStart;
+    tickMs += currentTickMs;
+    tickCount++;
 
-  requestAnimationFrame(loop);
+    render();
+
+    if (stepRequested) {
+      stepRequested = false;
+    }
+
+    fpsCounter++;
+  } else {
+    // Just render the current state when paused (in case we resize or change colors)
+    render();
+  }
 }
 
-runPhysicsLoop();
+function frame() {
+  loop();
+  requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(frame);
 
 playPauseBtn.addEventListener('click', () => {
     isPaused = !isPaused;

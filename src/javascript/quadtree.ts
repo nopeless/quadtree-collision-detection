@@ -57,7 +57,7 @@ export class QuadTree {
         // Successfully inserted
       }
     }
-    this.particles = [];
+    this.particles.length = 0;
   }
 
   _insertIntoChildren(p: Particle): boolean {

@@ -36,7 +36,7 @@ export class QuadTreeKeep extends QuadTree {
   update(root: QuadTreeKeep): void {
     const movedParticles: Particle[] = [];
     this._collectMoved(movedParticles);
-    
+
     for (const p of movedParticles) {
       root.insert(p);
     }
@@ -56,13 +56,13 @@ export class QuadTreeKeep extends QuadTree {
                            this.northwest!.particles.length + 
                            this.southeast!.particles.length + 
                            this.southwest!.particles.length;
-        
+
         if (totalCount <= this.capacity) {
           this.particles.push(...this.northeast!.particles);
           this.particles.push(...this.northwest!.particles);
           this.particles.push(...this.southeast!.particles);
           this.particles.push(...this.southwest!.particles);
-          
+
           this.northeast = null;
           this.northwest = null;
           this.southeast = null;
@@ -105,7 +105,7 @@ export function processAllCollidingPairsKeep(engine: Engine, callback: (p1: Part
     persistentTree = null; // force rebuild
     engine.dirty = false
   }
-  
+
   const particles = engine.particles;
   if (particles.length === 0) return;
 
@@ -117,7 +117,7 @@ export function processAllCollidingPairsKeep(engine: Engine, callback: (p1: Part
   if (!persistentTree || persistentTree.boundary.halfW !== halfW || persistentTree.boundary.halfH !== halfH) {
     const boundary = new Rectangle(centerX, centerY, halfW, halfH);
     persistentTree = new QuadTreeKeep(boundary, engine.bucketSize || 4);
-    
+
     for (let i = 0; i < particles.length; i++) {
       persistentTree.insert(particles[i]);
     }
@@ -133,7 +133,7 @@ export function processAllCollidingPairsKeep(engine: Engine, callback: (p1: Part
   for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
     seen.add(p);
-    
+
     const searchArea = p.radius + engine.maxRadius;
     const range = new Rectangle(p.pos.x, p.pos.y, searchArea, searchArea);
     const candidates = persistentTree.query(range, []);
