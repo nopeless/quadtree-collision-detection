@@ -11,19 +11,19 @@ class QuadTree:
         self.southwest = None
         self.southeast = None
 
-    def subdivide(self):
-        """
-        1. Calculate new boundaries (half width/height)
-        2. Create 4 new QuadTree instances
-        3. Set self.divided = True
-        """
-        pass
-
     def insert(self, point):
         """
         1. If point not in boundary, return False
         2. If len(points) < capacity, add point and return True
         3. Otherwise, subdivide() and insert into children leading to return True
+        """
+        pass
+
+    def subdivide(self):
+        """
+        1. Calculate new boundaries (half width/height)
+        2. Create 4 new QuadTree instances
+        3. Set self.divided = True
         """
         pass
 
