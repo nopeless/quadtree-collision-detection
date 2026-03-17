@@ -74,7 +74,7 @@ export class QuadTreeKeep extends QuadTree {
     } else {
       for (let i = this.particles.length - 1; i >= 0; i--) {
         const p = this.particles[i];
-        if (!this.boundary.contains(p)) {
+        if (!this.boundary.contains(p.pos)) {
           moved.push(p);
           const last = this.particles.pop()!;
           if (i < this.particles.length) {

@@ -34,12 +34,12 @@ export class Rectangle {
     this.halfH = halfH;
   }
 
-  contains(p: Particle): boolean {
+  contains(pos: Vector2): boolean {
     return (
-      p.pos.x >= this.centerX - this.halfW &&
-      p.pos.x <= this.centerX + this.halfW &&
-      p.pos.y >= this.centerY - this.halfH &&
-      p.pos.y <= this.centerY + this.halfH
+      pos.x >= this.centerX - this.halfW &&
+      pos.x <= this.centerX + this.halfW &&
+      pos.y >= this.centerY - this.halfH &&
+      pos.y <= this.centerY + this.halfH
     );
   }
 
@@ -88,6 +88,14 @@ export function collideParticles(
   p1: Particle,
   p2: Particle,
 ): void {
+  // check AABB first
+  if (p1.pos.x + p1.radius < p2.pos.x - p2.radius ||
+      p1.pos.x - p1.radius > p2.pos.x + p2.radius ||
+      p1.pos.y + p1.radius < p2.pos.y - p2.radius ||
+      p1.pos.y - p1.radius > p2.pos.y + p2.radius) {
+    return;
+  }
+
   const dx = p1.pos.x - p2.pos.x;
   const dy = p1.pos.y - p2.pos.y;
 

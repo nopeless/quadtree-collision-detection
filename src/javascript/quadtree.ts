@@ -27,6 +27,37 @@ export class QuadTree {
     this.southwest = null;
   }
 
+  _insertIntoChildren(p: Particle): boolean {
+    /**
+     * Short circuiting behavior
+     */
+    return (
+      this.northeast!.insert(p) ||
+      this.northwest!.insert(p) ||
+      this.southeast!.insert(p) ||
+      this.southwest!.insert(p)
+    );
+  }
+
+  insert(p: Particle): boolean {
+    if (!this.boundary.contains(p.pos)) {
+      return false;
+    }
+
+    if (this.divided) {
+      return this._insertIntoChildren(p);
+    }
+
+    if (this.particles.length < this.capacity) {
+      this.particles.push(p);
+      return true;
+    }
+
+    this.subdivide();
+    return this._insertIntoChildren(p);
+  }
+
+
   subdivide(): void {
     const cx = this.boundary.centerX;
     const cy = this.boundary.centerY;
@@ -48,46 +79,11 @@ export class QuadTree {
     this.divided = true;
 
     for (const p of this.particles) {
-      if (
-        this.northeast.insert(p) ||
-        this.northwest.insert(p) ||
-        this.southeast.insert(p) ||
-        this.southwest.insert(p)
-      ) {
-        // Successfully inserted
+      if (!this._insertIntoChildren(p)) {
+        throw new Error('Failed to insert particle into subdivided quadtree');
       }
     }
     this.particles.length = 0;
-  }
-
-  _insertIntoChildren(p: Particle): boolean {
-    /**
-     * Short circuiting behavior
-     */
-    return (
-      this.northeast!.insert(p) ||
-      this.northwest!.insert(p) ||
-      this.southeast!.insert(p) ||
-      this.southwest!.insert(p)
-    );
-  }
-
-  insert(p: Particle): boolean {
-    if (!this.boundary.contains(p)) {
-      return false;
-    }
-
-    if (this.divided) {
-      return this._insertIntoChildren(p);
-    }
-
-    if (this.particles.length < this.capacity) {
-      this.particles.push(p);
-      return true;
-    }
-
-    this.subdivide();
-    return this._insertIntoChildren(p);
   }
 
   query(range: Rectangle, found: Particle[]): Particle[] {
@@ -105,7 +101,7 @@ export class QuadTree {
     }
 
     for (let i = 0; i < this.particles.length; i++) {
-      if (range.contains(this.particles[i])) {
+      if (range.contains(this.particles[i].pos)) {
         found.push(this.particles[i]);
       }
     }
